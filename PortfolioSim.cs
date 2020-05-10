@@ -9,34 +9,103 @@
 // Normally we just use the earliest date common to all system but if you
 // want to limit the date range further set a date for inception in 'startDate'
 // 'startingCap' is shared equally among all systems
-// Set 'scaling = 0.0' to use AutoScaling
+// Set 'scaling = 0.0' to use AutoScaling. If using Auto scaling start with SystemScaling=1.0 then adjust to taste. SystemScaling
+// is applied on top of the Autoscaling
+// the Margin line on the portfolio DOES NOT show margin requirements on FX systems!!
 var scenarios = new[] {
 	new {
-		name="Model JFT",
+		name="Age>365,Trades>100,AR>50,DD<20 2-Apr-20 - AUTO",
 		enabled=false,
-		startingCap=57000,//14-June-2015
+		startingCap=400000,
+		scaling=0.0,
+		systems = new[] {
+			// SystemID, SystemName, SystemScaling
+			Tuple.Create(122087689, "Open Energy", 1.0),
+			Tuple.Create(121637339, "Stock Dow",  1.0),
+			Tuple.Create(123071731,  "Mini Dow 123071731",  1.0),
+			Tuple.Create(122397210, "Futrs Only", 1.0),
+			Tuple.Create(122775625, "VIX TVIX ETFs", 1.0),
+		}
+	},
+	new {
+		name="Life post JFT - Auto Scaled",
+		enabled=false,
+		startingCap=100000,
+		scaling=0.0,
+		systems = new[] {
+			// SystemID, SystemName, SystemScaling
+			Tuple.Create(124998567, "abasacJAR 4X", 1.0 ),
+			//Tuple.Create(94987184,  "Just Forex Trades",  0.375),
+			//Tuple.Create(123472063, "dax and FB Global", 2.5),
+			//Tuple.Create(125935591, "Klarity", 1.0),
+			//Tuple.Create(117442067, "Carma Managed Future",1.0),
+			//Tuple.Create(125428941, "Clear Futures", 1.0),
+			Tuple.Create(102081384, "OPN W888", 0.5),
+			Tuple.Create(125587405, "Stock Star", 3.0),
+		}
+	},
+	new {
+		name="Life post JFT - Option A",
+		enabled=true,
+		startingCap=400000,
 		scaling=1.0,
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
+			Tuple.Create(124998567, "abasacJAR 4X", 6.0 ),
+			Tuple.Create(125935591, "Klarity", 3.0),
+			Tuple.Create(117442067, "Carma Managed Future",1.0),
+			Tuple.Create(125428941, "Clear Futures", 3.0),
 		}
 	},
-
 	new {
-		name="A new dawn",
+		name="Life post JFT - Option B",
+		enabled=false,
+		startingCap=400000,
+		scaling=2.0,
+		systems = new[] {
+			// SystemID, SystemName, SystemScaling
+			Tuple.Create(124998567, "abasacJAR 4X", 4.0 ),
+			Tuple.Create(125587405, "Stock Star", 3.0),
+			Tuple.Create(102081384, "OPN W888", 0.5),
+			//Tuple.Create(94987184,  "Just Forex Trades",  0.375),
+
+		}
+	},
+	new {
+		name="Heave to",
 		enabled=true,
-		startingCap=57000,
+		startingCap=40000,
 		scaling=1.0,
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
 			Tuple.Create(124998567, "abasacJAR 4X", 4.0 ),
-			Tuple.Create(94987184,  "Just Forex Trades",  0.50),
-			//Tuple.Create(123472063, "dax and FB Global", 2.5),
-			//Tuple.Create(125935591, "Klarity", 3.0),
-			//Tuple.Create(117442067, "Carma Managed Future",1.0),
-			//Tuple.Create(125428941, "Clear Futures", 3.0),
-			//Tuple.Create(102081384, "OPN W888", 0.5),
 			Tuple.Create(125587405, "Stock Star", 3.0),
+			//Tuple.Create(102081384, "OPN W888", 0.5),
+		}
+	},
+
+	new {
+		name="PPR",
+		enabled=false,
+		startingCap=30000,
+		scaling=1.0,
+		systems = new[] {
+			// SystemID, SystemName, SystemScaling
+			Tuple.Create(120622361, "NQ Kingpin", 0.7 ),
+			Tuple.Create(115023400, "Crude Oil Trader Z", 0.5),
+			Tuple.Create(119232154, "PegasiCap", 0.5),
+		}
+	},
+	new {
+		name="PPR Auto",
+		enabled=false,
+		startingCap=30000,
+		scaling=0.0,
+		systems = new[] {
+			// SystemID, SystemName, SystemScaling
+			Tuple.Create(120622361, "NQ Kingpin", 1.0 ),
+			Tuple.Create(115023400, "Crude Oil Trader Z", 1.0),
+			Tuple.Create(119232154, "PegasiCap", 1.0),
 		}
 	},
 };
@@ -53,13 +122,13 @@ bool showCorrelation = false;
 bool showBollingerBands = false;
 
 // Do the simulation for these Time Intevals
-//TimeInterval[] timeIntervals= new[] {TimeInterval.Day, TimeInterval.Month};
-TimeInterval[] timeIntervals= new[] {TimeInterval.Day};
+TimeInterval[] timeIntervals= new[] {TimeInterval.Day, TimeInterval.Month};
+//TimeInterval[] timeIntervals= new[] {TimeInterval.Day};
 
 // Normally we just use the earliest date common to all system but if you
 // want to limit the date range further set a date for inception here
 DateTime StartDate = DateTime.Parse("1-jan-2000");
-StartDate = DateTime.Parse("19-Mar-2020");
+//	 StartDate = DateTime.Parse("1-dec-2019");
 
 List<dynamic> scenarioStats = new List<object>();
 List<object> debug = new List<object>();
@@ -119,7 +188,7 @@ foreach (var scenario in scenarios) {
 			var modelEq = eqs.Last().Value;
 
 			//TABLE = from eq in eqs select new {Date = eq.Key, EQ = eq.Value };
-			TEXT=String.Format("{0} modelEq(${1:N1})",sysName,modelEq);
+			//TEXT=String.Format("{0} modelEq(${1:N1})",sysName,modelEq);
 
 			if ( scenario.scaling == 0.0 )
 				scaling = (double)startEq / (double)modelEq * system.Item3;
