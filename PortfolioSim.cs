@@ -5,197 +5,40 @@
 // SET UP THE MODEL HERE ==============================================================================================//
 // Adjust the system scaling in each system to select the relative volatility
 // and set an overall scaling and starting captial for all systems in the scenario
-// to adjust the overall portfolio volatility
+// to adjust the overall portfolio volatility, or set autoScaling=true for auto scaling according to model equity at start date
+// Normally we just use the earliest date common to all system but if you
+// want to limit the date range further set a date for inception in 'startDate'
+// 'startingCap' is shared equally among all systems
+// Set 'scaling = 0.0' to use AutoScaling
 var scenarios = new[] {
-
 	new {
-		name="TOS Top 5, age>100, trades>100",
-		startingCap=20000,
+		name="Model JFT",
+		enabled=false,
+		startingCap=57000,//14-June-2015
 		scaling=1.0,
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
-			Tuple.Create(122037920, "Currency VIX", 1.0),
-			Tuple.Create(122174703, "AlgoSys YM - Andromalius",  2.0),
-			Tuple.Create(116744132, "PFSignal", 5.0),
-			Tuple.Create(102427283, "Smart Volatility Margin", 1.0),
-			Tuple.Create(102427198, "Smart Volatility IRA", 1.0),
-		}
-	},
-/*  new {
-    name="Older TOS",
-    startingCap=50000,
-    scaling=2.0,
-    systems = new[] {
-      // SystemID, SystemName, SystemScaling
-      Tuple.Create(102427198,"Smart Volatility IRA", 0.2),
-      Tuple.Create(102237387,"25K Emini SP Portfolio",1.0),
-      Tuple.Create(102110837,"Correlation Factor",1.0),
-      Tuple.Create(81128026,"Carma Stocks",3.0),
-      Tuple.Create(102749732,"Euro vs USD",3.0),
-    }
-   },
-   new {
-    name="TOS, trades>=100, age>1yr, dd<25",
-    startingCap=50000,
-    scaling=1.0,
-    systems = new[] {
-      // SystemID, SystemName, SystemScaling
-      Tuple.Create(102427198,"Smart Volatility IRA", 1.0),
-      Tuple.Create(112786719,"Smart Bull Portfolio",1.0),
-      Tuple.Create(109496813,"30k Futures Portfolio",1.0),
-      Tuple.Create(102237387,"25K Emini SP Portfolio",1.0),
-      //Tuple.Create(95384675,"Annas Stocks",1.0),
-    }
-   },
- */
-
-	new {
-		name="Alchemy",
-		startingCap=50000,
-		scaling=2.0,
-		systems = new[] {
-			// SystemID, SystemName, SystemScaling
-			Tuple.Create(100722273, "VolatilityTrader", 0.1),
-			//Tuple.Create(116711157, "Waverunner", 0.1),//Autrading since 28-6-18
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),//Autotrading since 1-6-16
-			Tuple.Create(115990904, "Diamond 4x", 0.5),//Autotrading since 21-1-18
-		}
-	},
-
-/*
-   new {
-    name="AlchemyX2",
-    startingCap=50000,
-    scaling=4.0,
-    systems = new[] {
-      // SystemID, SystemName, SystemScaling
-      Tuple.Create(100722273, "VolatilityTrader", 0.1),
-      Tuple.Create(116711157, "Waverunner", 0.1),//Autrading since 28-6-18
-      Tuple.Create(94987184,  "Just Forex Trades",  1.0),//Autotrading since 1-6-16
-      Tuple.Create(115990904, "Diamond 4x", 0.5),//Autotrading since 21-1-18
-    }
-   },
- */
-
-	new {
-		name="Golden Goose",
-		startingCap=50000,
-		scaling=2.0,
-		systems = new[] {
-			// SystemID, SystemName, SystemScaling
-			Tuple.Create(100722273, "VolatilityTrader", 0.1),
-			Tuple.Create(113004400, "COREX", 2.0),
 			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
-			Tuple.Create(115990904, "Diamond 4x", 0.5),
 		}
 	},
 
 	new {
-		name="Golden Goose~",
-		startingCap=50000,
-		scaling=2.0,
-		systems = new[] {
-			// SystemID, SystemName, SystemScaling
-			Tuple.Create(100722273, "VolatilityTrader", 0.1),
-			Tuple.Create(113004400, "COREX", 2.5),
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
-			Tuple.Create(115990904, "Diamond 4x", 0.75),
-		}
-	},
-
-	new {
-		name="Golden Goose 2~",
-		startingCap=50000,
-		scaling=2.0,
-		systems = new[] {
-			// SystemID, SystemName, SystemScaling
-			Tuple.Create(100722273, "VolatilityTrader", 0.1),
-			Tuple.Create(113004400, "COREX", 4.0),
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
-			Tuple.Create(115990904, "Diamond 4x", 0.75),
-		}
-	},
-
-	new {
-		name="Golden Goose #3",
-		startingCap=50000,
-		scaling=2.0,
-		systems = new[] {
-			// SystemID, SystemName, SystemScaling
-			Tuple.Create(100722273, "VolatilityTrader", 0.1),
-			Tuple.Create(113004400, "COREX", 5.0),
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
-			Tuple.Create(115990904, "Diamond 4x", 0.75),
-		}
-	},
-
-	new {
-		name="Golden Goose #3- Mini",
-		startingCap=25000,
+		name="A new dawn",
+		enabled=true,
+		startingCap=57000,
 		scaling=1.0,
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
-			Tuple.Create(100722273, "VolatilityTrader", 0.1),
-			Tuple.Create(113004400, "COREX", 5.0),
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
-			Tuple.Create(115990904, "Diamond 4x", 0.75),
+			Tuple.Create(124998567, "abasacJAR 4X", 4.0 ),
+			Tuple.Create(94987184,  "Just Forex Trades",  0.50),
+			//Tuple.Create(123472063, "dax and FB Global", 2.5),
+			//Tuple.Create(125935591, "Klarity", 3.0),
+			//Tuple.Create(117442067, "Carma Managed Future",1.0),
+			//Tuple.Create(125428941, "Clear Futures", 3.0),
+			//Tuple.Create(102081384, "OPN W888", 0.5),
+			Tuple.Create(125587405, "Stock Star", 3.0),
 		}
 	},
-
-	new {
-		name="Golden Goose #3- Mini - SVMb",
-		startingCap=13000,
-		scaling=1.0,
-		systems = new[] {
-			// SystemID, SystemName, SystemScaling
-			Tuple.Create(102427283, "Smart Vol Margin", 3.0),
-			Tuple.Create(113004400, "COREX", 5.0),
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
-			Tuple.Create(115990904, "Diamond 4x", 0.75),
-		}
-	},
-
-/*
-   new {
-    name="Live",
-    startingCap=13000,
-    scaling=1.0,
-    systems = new[] {
-      // SystemID, SystemName, SystemScaling
-      Tuple.Create(102427283, "Smart Vol Margin", 0.5),
-      Tuple.Create(113004400, "COREX", 0.5),
-      Tuple.Create(94987184,  "Just Forex Trades",  0.5),
-      Tuple.Create(115990904, "Diamond 4x", 0.75),
-    }
-   },
-   new {
-    name="Live ~",
-    startingCap=13000,
-    scaling=1.0,
-    systems = new[] {
-      // SystemID, SystemName, SystemScaling
-      Tuple.Create(102427283, "Smart Vol Margin", 1.0),
-      Tuple.Create(113004400, "COREX", 1.0),
-      Tuple.Create(94987184,  "Just Forex Trades",  0.25),
-      Tuple.Create(115990904, "Diamond 4x", 0.20),
-    }
-   },
- */
-
-	new {
-		name="Bean Stalk",
-		startingCap=50000,
-		scaling=2.0,
-		systems = new[] {
-			// SystemID, SystemName, SystemScaling
-			Tuple.Create(100722273, "VolatilityTrader", 0.1),
-			Tuple.Create(113004400, "COREX", 2.0),
-			Tuple.Create(94987184,  "Just Forex Trades",  1.0),
-			Tuple.Create(115990904, "Diamond 4x", 0.5),
-			Tuple.Create(112786719, "Smart Bull Portfolio",  2.0),
-		}
-	},
-
 };
 
 // CODE BELOW HERE =====================================================================================================//
@@ -207,35 +50,39 @@ List<System.Drawing.Color> colors = new List<System.Drawing.Color>(new System.Dr
 // Select the output reports
 bool showStats = true;
 bool showCorrelation = false;
+bool showBollingerBands = false;
+
 // Do the simulation for these Time Intevals
-TimeInterval[] timeIntervals= new[] {TimeInterval.Day, TimeInterval.Month};
+//TimeInterval[] timeIntervals= new[] {TimeInterval.Day, TimeInterval.Month};
+TimeInterval[] timeIntervals= new[] {TimeInterval.Day};
 
 // Normally we just use the earliest date common to all system but if you
 // want to limit the date range further set a date for inception here
 DateTime StartDate = DateTime.Parse("1-jan-2000");
-//		 StartDate = DateTime.Parse("19-jan-2018");
-// 'WaveRunner' has some suss data before the autraders signed on
-StartDate = DateTime.Parse("9-mar-2018");
+StartDate = DateTime.Parse("19-Mar-2020");
 
 List<dynamic> scenarioStats = new List<object>();
 List<object> debug = new List<object>();
 
 // SCENARIO LOOP BELOW HERE =====================================================================================================//
 foreach (var scenario in scenarios) {
+	if (!scenario.enabled) continue;
 	foreach (var timeInterval in timeIntervals ) {
 		int colorIndex = 0;
-		var startEq = scenario.startingCap;
+		var startEq = scenario.startingCap / scenario.systems.Length;
 
 		// Get the Monthly equity data with commissions and fees
 		ITimeSheet timeSheet = TimeSheetFactory( scenario.systems.Select(id => (long)id.Item1),
 		                                         timeInterval,
-		                                         EquityType.Equity|EquityType.Diff );
+		                                         EquityType.Equity|EquityType.Diff|EquityType.MarginUsed );
 
 		// return Equity Sheet as sparse Deedle.Frame
 		var sparseEquityFrame = timeSheet.EquitiesSheet(false);
-
 		// Drop rows from the frame which dont have data for all systems
 		var denseEquityFrame = FrameModule.DropSparseRows(sparseEquityFrame);
+
+		//TABLE = FrameToTable(denseEquityFrame);
+
 		// Make a new empty frame with the same keys
 		var myFrame = Frame.FromRowKeys(denseEquityFrame.RowKeys.Where(k=>k>=StartDate));
 
@@ -254,16 +101,35 @@ foreach (var scenario in scenarios) {
 
 		// Iterate our system list
 		foreach ( var system in scenario.systems ) {
-			var scaling = system.Item3 * scenario.scaling;
+			double scaling;
 
 			// We'll lookup the system name from the database so that spelling errors in our own list wont give us grief
 			String sysName = C2SYSTEMS.Where(s=>s.SystemId == system.Item1).Select(s=>s.SystemName).First();
 
 			// get the "diffs" for this system
 			var diffs = denseEquityFrame.GetColumn<decimal>(sysName+" [diff]").Observations.Where(kvp=>kvp.Key>=StartDate).ToList();
+
+			// Get the equity values of the system
+			var eqs   = denseEquityFrame.GetColumn<decimal>(sysName+" [eq]").Observations.Where(kvp=>kvp.Key>=StartDate).ToList();
+
+			// Get the MarginUsed values of the system
+			var mrgs   = denseEquityFrame.GetColumn<decimal>(sysName+" [mrgn]").Observations.Where(kvp=>kvp.Key>=StartDate).ToList();
+
+			// use the most recent Equity to determnine the value for our scaling
+			var modelEq = eqs.Last().Value;
+
+			//TABLE = from eq in eqs select new {Date = eq.Key, EQ = eq.Value };
+			TEXT=String.Format("{0} modelEq(${1:N1})",sysName,modelEq);
+
+			if ( scenario.scaling == 0.0 )
+				scaling = (double)startEq / (double)modelEq * system.Item3;
+			else
+				scaling = system.Item3 * scenario.scaling;
+
 			// open some new lists
 			var eqty = new List<KeyValuePair<DateTime,decimal> >();
 			var ret = new List<KeyValuePair<DateTime,decimal> >();
+			var mu = new List<KeyValuePair<DateTime,decimal> >();
 
 			for (var i=0; i<diffs.Count; i++) {
 				eqty.Add( new KeyValuePair<DateTime,decimal>(
@@ -274,17 +140,27 @@ foreach (var scenario in scenarios) {
 							 diffs[i].Key,
 							 (i==0) ? 0 : Math.Round(((eqty[i].Value/eqty[i-1].Value)-1)*100,2 ))
 				         );
+				mu.Add( new KeyValuePair<DateTime,decimal>(
+							diffs[i].Key,
+							mrgs[i].Value * (decimal)scaling )
+				        );
 			}
 
 			var eqPoints = new Series<DateTime,decimal>( eqty );
+			var mgnPoints = new Series<DateTime,decimal>( mu );
 
 			myFrame.AddColumn(sysName+" Eq", eqPoints);
 			myFrame.AddColumn(sysName+" Ret", new Series<DateTime,decimal>(ret) );
+			myFrame.AddColumn(sysName+" Mgn", mgnPoints );
 
 			systemsChart.Add(eqPoints,
-			                 String.Format("{0}({1:N0}%)",sysName,scaling*100),
+			                 String.Format("{0}({1:N1}%)",sysName,scaling*100),
 			                 colors[colorIndex++]);
 
+			/* systemsChart.Add(mgnPoints,
+			   String.Format("{0}({1:N1}%)",sysName,scaling*100),
+			   colors[colorIndex++]);
+			 */
 			double divisor=100;
 			var rets = ret.Select(kv=>(double)kv.Value);
 			if (timeInterval == TimeInterval.Day) divisor=365;
@@ -292,18 +168,23 @@ foreach (var scenario in scenarios) {
 
 			var sd = new RunningStatistics(rets.Select(d=>d*divisor/100)).StandardDeviation;
 			var u = new RunningStatistics(rets.Select(d=>d*divisor)).Mean;
+
 			var sharpe = (u - 2.5 ) / sd;
 			sysData.Add( new {
 				System = sysName,
 				Mean_ROI = String.Format("{0:N1}",u),
 				SD = String.Format("{0:N0}",sd),
+				Sharpe = String.Format("{0:N2}", sharpe),
 			});
 		}
 
 		// Combined the strategies performance into a portfolio
 		var eqyKeys = myFrame.ColumnKeys.Where( key=>key.Contains("Eq") );
+		var mgnKeys = myFrame.ColumnKeys.Where( key=>key.Contains("Mgn") );
 		var rowKeys = myFrame.RowKeys;
 		var myEqty = new List<KeyValuePair<DateTime,decimal> >();
+		var myMrgn = new List<KeyValuePair<DateTime,decimal> >();
+
 		// foreach DateTime
 		foreach (var row in rowKeys) {
 			decimal total = 0;
@@ -312,27 +193,35 @@ foreach (var scenario in scenarios) {
 				total += (decimal)myFrame[col,row];
 			}
 			myEqty.Add( new KeyValuePair<DateTime,decimal>(row, total) );
+			total = 0;
+			// get the equity point of each system
+			foreach (var col in mgnKeys) {
+				total += (decimal)myFrame[col,row];
+			}
+			myMrgn.Add( new KeyValuePair<DateTime,decimal>(row, total) );
 		}
 		var lastChange = myEqty[myEqty.Count-1].Value - myEqty[myEqty.Count-2].Value;
 		var portfolioEquitySeries = new Series<DateTime,decimal>( myEqty );
-		portfolioChart.Add(portfolioEquitySeries, "Portfolio", Color.Blue);
+		var portfolioMarginSeries = new Series<DateTime,decimal>( myMrgn );
+		portfolioChart.Add(portfolioEquitySeries, "Equity", Color.Blue);
+		portfolioChart.Add(portfolioMarginSeries, "Margin", Color.Red);
 
-		// Calculate Bollinger bands
-		var bbtop = C2TALib.BBandTop(portfolioEquitySeries, 15, 2.0);
-		var bbbot = C2TALib.BBandBot(portfolioEquitySeries, 15, 2.0);
-		var ma15 = C2TALib.MA(portfolioEquitySeries, 14);
+		//var dd = portfolioEquitySeries.Values.Select(a => (double)a).ToList();
+		//TEXT = string.Join(", ", dd );
 
+		if (showBollingerBands) {
+			// Calculate Bollinger bands
+			var bbtop = C2TALib.BBandTop(portfolioEquitySeries, 15, 2.0);
+			var bbbot = C2TALib.BBandBot(portfolioEquitySeries, 15, 2.0);
+			var ma15 = C2TALib.MA(portfolioEquitySeries, 14);
 
-		// Add equity to the chart
-		//portfolioChart.Add(equity, "Equity", Color.Blue);
-
-		// Add upper BBand
-		//portfolioChart.Add(bbtop, "BBTop", Color.Black);
-		// Add lower BBand
-		//portfolioChart.Add(bbbot, "BBBot", Color.Black);
-		// Add MA
-		//portfolioChart.Add(ma15, "MA15", Color.Red);
-
+			// Add upper BBand
+			portfolioChart.Add(bbtop, "BBTop", Color.Black);
+			// Add lower BBand
+			portfolioChart.Add(bbbot, "BBBot", Color.Black);
+			// Add MA
+			portfolioChart.Add(ma15, "MA15", Color.Red);
+		}
 
 		// Find CAGR
 		var startDate = portfolioEquitySeries.Observations.First().Key;
@@ -341,7 +230,14 @@ foreach (var scenario in scenarios) {
 		var endEq = portfolioEquitySeries.Observations.Last().Value;
 		double cagr = Math.Pow( ((double)endEq/(double)startEqy), 1/((double)((endDate-startDate).Days)/365) )-1;
 
-		double mrpp = ((cagr-1) * (double)startEqy) / ((timeInterval == TimeInterval.Day) ? 365 : 12);
+		//double mrpp = ((cagr) * (double)startEqy) / ((timeInterval == TimeInterval.Day)? 365:12);
+		double mrpp = (((double)endEq-(double)startEqy) / (endDate-startDate).Days) * ((timeInterval == TimeInterval.Day) ? 1 : 30);
+
+		//TEXT=String.Format("days: {0:n0}",(endDate-startDate).Days);
+		//TEXT=String.Format("startEqy: ${0:n0}",startEqy);
+		//TEXT=String.Format("endEq: ${0:n0}",endEq);
+		//TEXT=String.Format("cagr: {0:n1}%",cagr*100);
+		//TEXT=String.Format("mrpp: ${0:n0}",mrpp);
 
 		// Find MaxDD
 		var prices = portfolioEquitySeries.Values.ToList();
@@ -369,16 +265,20 @@ foreach (var scenario in scenarios) {
 			Last = Math.Round(lastChange, 0),
 		});
 		// OUTPUT THE DATA ==============================================================================================//
-		//TABLE=FrameToTable(denseEquityFrame);
-		//TABLE=FrameToTable(myFrame);
+		// TABLE=FrameToTable(denseEquityFrame);
+		// TABLE=FrameToTable(myFrame);
+
 		HTML = @"<p style='page-break-before: always;'>";
 		//HTML = "<br/>";
 		H1=scenario.name + " - " + timeInterval.ToString();
 		H4=endDate.ToString();
+		TEXT=String.Format("startEqy: ${0:n0}",startEqy);
+		TEXT=String.Format("endEq: ${0:n0}",endEq);
+		TEXT=String.Format("days: {0:n0}",(endDate-startDate).Days);
 		TEXT=String.Format("CAGR: {0:n0}%",cagr * 100);
 		TEXT=String.Format("MaxDD Recorded: {0:N1}%",maxDd * 100);
 		TEXT=String.Format("MaxDD Worst Case: {0:N1}% (if max draw down occurred at inception)",maxDd3 * 100);
-		TEXT=String.Format("Last period: ${0:N0}", lastChange);
+		TEXT=String.Format("Last period: ${0:N0} (Avg: ${1:n0})", lastChange, mrpp);
 		CHART=portfolioChart;
 		HR();
 		CHART=systemsChart;
@@ -427,4 +327,4 @@ TABLE=scenarioStats.OrderBy(x=>x.TimeFrame).ThenBy(x=>x.Scenario);
 
 
 //H1 = "DEBUG:";
-//  TABLE=debug;
+//TABLE=debug;
