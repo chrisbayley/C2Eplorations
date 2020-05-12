@@ -2,9 +2,9 @@ var systems = new[] {
 	// SystemID, SystemName, SystemScaling
 	// Run the forex systems first so we can scrape the trades to update the X-Rates table
 	Tuple.Create(94987184,  "Just Forex Trades",  0.3),
-/*
-    Tuple.Create(124998567, "abasacJAR 4X", 6.0 ),
-    // PPRs pets systems
+
+    //Tuple.Create(124998567, "abasacJAR 4X", 6.0 ), // Seems to be missing 60 odd trades !!!!
+/*    // PPRs pets systems
     Tuple.Create(120622361, "NQ Kingpin", 1.0 ),
     Tuple.Create(115023400, "Crude Oil Trader Z", 1.0),
     Tuple.Create(119232154, "PegasiCap", 1.0),
@@ -14,7 +14,7 @@ var systems = new[] {
     Tuple.Create(125428941, "Clear Futures", 3.0),
     Tuple.Create(102081384, "OPN W888", 0.5),
     Tuple.Create(125587405, "Stock Star", 3.0),
- */
+
 	// Forex systems
 	Tuple.Create(  121872737, "Aggressive Trend Scalper", 1.0 ),
 	Tuple.Create(  124998567, "abasacJAR 4X   ", 1.0 ),
@@ -26,7 +26,7 @@ var systems = new[] {
 	Tuple.Create(  116569503, "FOREX SWING SYSTEM", 1.0 ),
 	Tuple.Create(  123805444, "Only A Boring FX", 1.0 ),
 	Tuple.Create(  123530483, "Trading FX complex", 1.0 ),
-/*
+
 	// Futures strats from Top strats
 	Tuple.Create(   125587405, "stock star", 1.0 ),
 	Tuple.Create(   125982253, "GoldFutures", 1.0 ),
@@ -93,6 +93,13 @@ var systems = new[] {
 */
 };
 
+// Get some colors to use
+List<System.Drawing.Color> colors = new List<System.Drawing.Color>(new System.Drawing.Color[]
+                                                                   {Color.Blue, Color.Brown, Color.Red, Color.Green, Color.Orange, Color.Purple,
+                                                                    Color.Pink, Color.DarkGreen, Color.DarkBlue, Color.Olive}
+                                                                   );
+
+int colorIndex = 0;
 var systemsIds = systems.Select(f=>(long)f.Item1);
 var sideWord = new Dictionary <string,string> () {
 	{"BTO","LONG"}, {"STO","SHORT"}
@@ -221,7 +228,34 @@ foreach (var system in systems) {
 			};
 		}).ToList();
 		TABLE=ourTrades;
-	}else{
+
+		// CHARTING
+		// Create a chart objects
+		ITimeSeriesChart systemChart = new TimeSeriesChart();
+		systemChart.Name = system.Item2;//"System equity curve";
+		//IChartTimeSeries systemSeries = new ChartTimeSeries();
+		//systemSeries.Type = ChartTypes.Line;
+
+		//var eqPoints = new Series<DateTime,decimal>( ourTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),t.Equity); }));
+		var eqPoints = new List<KeyValuePair<DateTime,decimal>>( ourTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),t.Equity); }));
+		var eqPoints2 = new Series<DateTime,decimal>( eqPoints );
+
+        var eqPoints3 = C2EQUITY.Where(sys=>sys.SystemId == system.Item1).Select(ep => new KeyValuePair<DateTime,decimal>(ep.DateTime,ep.Value) );
+        var eqPoints4 = new Series<DateTime,decimal>( eqPoints3 );
+
+		systemChart.Add( eqPoints2, "Realised Equity",
+						 //String.Format("{0}({1:N1}%)",system.Item2,1.0*100),
+						 colors[colorIndex++]);
+
+      systemChart.Add( eqPoints4, "Realtime Equity",
+						 //String.Format("{0}({1:N1}%)",system.Item2,1.0*100),
+						 colors[colorIndex++]);
+      //TABLE=eqPoints2;
+      HR();
+      CHART=systemChart;
+
+
+    }else{
 		TABLE = trades;
 		TABLE = signals;
 	}
