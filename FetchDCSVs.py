@@ -7,6 +7,9 @@
 # Note: if no file found, a file will be returned with content similar to this: <p class="posStatusMessage">No closed trades.</p>
 
 
+import urllib
+import datetime
+
 strategies = [115023400, 120622361, 119232154, 94987184]
 
 date = datetime.date.today()
