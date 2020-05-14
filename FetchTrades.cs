@@ -1,19 +1,19 @@
 var systems = new[] {
 	// SystemID, SystemName, SystemScaling, System stops
 	// Run the forex systems first so we can scrape the trades to update the X-Rates table
-	Tuple.Create(94987184,  "Just Forex Trades",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0}),
-	Tuple.Create(124998567, "abasacJAR 4X", 1.0, new double[] {5.0,10.0,15.0}), // Seems to be missing 60 odd trades !!!!
+	Tuple.Create(94987184,  "Just Forex Trades",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
+	// Tuple.Create(124998567, "abasacJAR 4X", 1.0, new double[] {5.0,10.0,15.0}), // Seems to be missing 60 odd trades !!!!
 
 	// PPRs pets systems
 	// Tuple.Create(120622361, "NQ Kingpin", 1.0 ),
 	// Tuple.Create(115023400, "Crude Oil Trader Z", 1.0),
 	// Tuple.Create(119232154, "PegasiCap", 1.0),
 	// CDBs pet systems
-	Tuple.Create(125935591, "Klarity", 3.0, new double[] {5.0,10.0,15.0} ),
-	//Tuple.Create(117442067, "Carma Managed Future",1.0, new double[] {5.0,10.0,15.0} ), // Bad data in here causes Div0 Error
-	Tuple.Create(125428941, "Clear Futures", 3.0, new double[] {5.0,10.0,15.0} ),
-	//Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0} ), // Casuses 'Duplicate keys' error
-	Tuple.Create(125587405, "Stock Star", 3.0, new double[] {5.0,10.0,15.0} ),
+	// Tuple.Create(125935591, "Klarity", 3.0, new double[] {5.0,10.0,15.0} ),
+	////Tuple.Create(117442067, "Carma Managed Future",1.0, new double[] {5.0,10.0,15.0} ), // Bad data in here causes Div0 Error
+	// Tuple.Create(125428941, "Clear Futures", 3.0, new double[] {5.0,10.0,15.0} ),
+	////Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0} ), // Casuses 'Duplicate keys' error
+	// Tuple.Create(125587405, "Stock Star", 3.0, new double[] {5.0,10.0,15.0} ),
 	//
 	// // Forex systems
 	// Tuple.Create(  121872737, "Aggressive Trend Scalper", 1.0 ),
@@ -230,13 +230,15 @@ foreach (var system in systems) {
 			    Equity=runningEquity,
 			};
 		}).ToList();
-		TABLE=ourTrades;
+		TABLE=ourTrades.OrderByDescending(t=>t.ClosedTimeET);
 
 		// Create a chart object
 		ITimeSeriesChart systemChart = new TimeSeriesChart();
 		systemChart.Name = system.Item2;//"System equity curve";
 		//IChartTimeSeries systemSeries = new ChartTimeSeries();
 		//systemSeries.Type = ChartTypes.Line;
+		ITimeSeriesChart scalingChart = new TimeSeriesChart();
+		scalingChart.Name = system.Item2 + " Stops Scaling";//"System equity curve";
 
 		var realisedEquity = new List<KeyValuePair<DateTime,decimal> >( ourTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),t.Equity); }));
 		var realtimeEquity = C2EQUITY.Where(sys=>sys.SystemId == system.Item1).Select(ep => new KeyValuePair<DateTime,decimal>(ep.DateTime,ep.Value) );
@@ -251,19 +253,24 @@ foreach (var system in systems) {
 
 		//TABLE = trades;
 		foreach ( var stop in autoStops ) {
-			decimal runnningEquity = startingCash;
+			runningEquity = startingCash;
+			decimal runningScaling = 1.0m;
+			int stopsHit = 0;
 
 			var stopTrades = ourTrades.Select( trade =>
 			{
 				decimal stopResult = 0;
 
 				if ( -stop < trade.DD_as_Pcnt )  {
-				    stopResult = trade.Trade_PL;
+				    stopResult = Math.Round(trade.Trade_PL * runningScaling,2);
+					runningEquity = Math.Max(runningEquity+stopResult,0);
 				}else{
-				    stopResult = Math.Round( (-stop/trade.DD_as_Pcnt) * trade.DD_as_Dlr, 0 );
+				    stopResult = Math.Round( (-stop/trade.DD_as_Pcnt) * (trade.DD_as_Dlr * runningScaling), 0 );
+					runningEquity = Math.Max(runningEquity+stopResult,0);
+					runningScaling = Math.Max(Math.Round(runningEquity/trade.Equity,1),0);
+					stopsHit ++;
 				}
 
-				runnningEquity += stopResult;
 				return new {
 				    ClosedTimeET = trade.ClosedTimeET,
 				    ModelDdPct = trade.DD_as_Pcnt,
@@ -272,19 +279,27 @@ foreach (var system in systems) {
 				    ModelPnL = trade.Trade_PL,
 				    StopPnL = stopResult,
 				    ModelEquity = trade.Equity,
-				    StopEquity = runnningEquity,
+				    StopEquity = runningEquity,
+					Scaling = runningScaling,
+					StopHits = stopsHit,
 				};
 			}).ToList();
-			//TABLE = stopTrades;
-			var stopEquity = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),t.StopEquity); }));
+			// TABLE = stopTrades;
 
+			var stopEquity = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),t.StopEquity); }));
 			systemChart.Add( new Series<DateTime,decimal>( stopEquity ),
-			                 String.Format("Equity w {0}% stop", -stop),
+			                 String.Format("Equity w {0}% stop", stop),
+			                 colors[colorIndex]);
+
+			var scalingPoints = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),(decimal)t.Scaling); }));
+			scalingChart.Add( new Series<DateTime,decimal>( scalingPoints ),
+			                 String.Format("Scaling for {0}% stop", stop),
 			                 colors[colorIndex++]);
 
 		} // autostops
 		HR();
 		CHART=systemChart;
+		CHART=scalingChart;
 	}else{
 		TABLE = trades;
 		TABLE = signals;
