@@ -46,7 +46,7 @@ var scenarios = new[] {
 	},
 	new {
 		name="Life post JFT - Option A",
-		enabled=true,
+		enabled=false,
 		startingCap=400000,
 		scaling=1.0,
 		systems = new[] {
@@ -68,19 +68,19 @@ var scenarios = new[] {
 			Tuple.Create(125587405, "Stock Star", 3.0),
 			Tuple.Create(102081384, "OPN W888", 0.5),
 			//Tuple.Create(94987184,  "Just Forex Trades",  0.375),
-
 		}
 	},
 	new {
 		name="Heave to",
 		enabled=true,
 		startingCap=40000,
-		scaling=1.0,
+		scaling=0.5,
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
 			Tuple.Create(124998567, "abasacJAR 4X", 4.0 ),
 			Tuple.Create(125587405, "Stock Star", 3.0),
-			//Tuple.Create(102081384, "OPN W888", 0.5),
+			Tuple.Create(102081384, "OPN W888", 0.5),
+			Tuple.Create(125624499, "Dow M",2.0)
 		}
 	},
 
