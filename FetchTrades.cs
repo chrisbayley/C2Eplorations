@@ -2,10 +2,10 @@ var systems = new[] {
 	// SystemID, SystemName, SystemScaling, System stops
 	// Run the forex systems first so we can scrape the trades to update the X-Rates table
 	// Tuple.Create(94987184,  "Just Forex Trades",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
-	// Tuple.Create(124998567, "abasacJAR 4X", 1.0, new double[] {5.0,10.0,15.0}), // Seems to be missing 60 odd trades !!!!
+	//Tuple.Create(124998567, "abasacJAR 4X", 1.0, new double[] {5.0,10.0,15.0}), // Seems to be missing 60 odd trades !!!!
 	//Tuple.Create(117863277,  "Forex Agressive risk",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
 
-	Tuple.Create(122467834,  "Auto Wave Forex",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
+	//Tuple.Create(122467834,  "Auto Wave Forex",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
 
 	// PPRs pets systems
 	// Tuple.Create(120622361, "NQ Kingpin", 1.0 ),
@@ -18,7 +18,7 @@ var systems = new[] {
 	////Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0} ), // Casuses 'Duplicate keys' error
 	// Tuple.Create(124998567, "abasacJAR 4X", 4.0, new double[] {5.0,10.0,15.0} ),
 	// Tuple.Create(125587405, "Stock Star", 3.0, new double[] {5.0,10.0,15.0} ),
-	// Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0}),
+	Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0}),
 	//Tuple.Create(125624499, "Dow M",2.0, new double[] {5.0,10.0,15.0}),// Casuses 'Duplicate keys' error
 
 
@@ -147,6 +147,9 @@ foreach (var system in systems) {
 	var autoStops = system.Item4.Select(x=>(decimal)x);
 	var startingCash = C2SYSTEMS.Where( sys => sys.SystemId == system.Item1 ).Select( sys => sys.StartingCash ).First();
 	decimal runningEquity = startingCash;
+	DateTime lastExitTime = new DateTime(0);
+	DateTime exitTime = new DateTime(0);
+
 
 	// We need to convert each query to a List so that we don't have open more than one database connection
 	var signals = C2SIGNALS.Where(sig => sig.SystemId == system.Item1 && sig.PostedWhen > startDate).OrderBy(sig=>sig.TradedWhen).ToList();
@@ -177,7 +180,6 @@ foreach (var system in systems) {
 			decimal ddQty=0,dd = 0;
 			decimal lastEquity = runningEquity;
 			runningEquity += trade.Result;
-			DateTime lastExitTime,exitTime;
 
 			// Search signals for this trade to establish open, close, and DD Qtys
 			foreach ( var sig in signals.Where( sig => sig.TradeId == trade.Id )) {
@@ -214,19 +216,20 @@ foreach (var system in systems) {
 			             * (decimal)XRates[signals.First().Currency];
 				}
 			}
-			// exitTime = trade.ExitTime;
-			// if ( exitTime == lastExitTime )
-			// 	exitTime +=;
+			exitTime = trade.ExitTime;
+			if ( exitTime == lastExitTime )
+				exitTime += new TimeSpan(1); //100ns
+			lastExitTime = exitTime;
 			return new {
 			    //TradeId=trade.Id,
-			    OpenTimeET=trade.EntryTime.ToString("yyyy-MM-dd HH:mm:ss"),
+			    OpenTimeET=trade.EntryTime,//.ToString("yyyy-MM-dd HH:mm:ss"),
 			    Side=sideWord[trade.Action],
 			    QtyOpen=openQty,
 			    Symbol=trade.Symbol,
 			    Description=trade.Symbol,
 			    AvgPriceOpen=Math.Round(openSum/openQty,4),
 			    QtyClosed=closeQty,
-			    ClosedTimeET=trade.ExitTime.ToString("yyyy-MM-dd HH:mm:ss"),
+			    ClosedTimeET=exitTime,//.ToString("yyyy-MM-dd HH:mm:ss"),
 			    AvgPriceClosed=Math.Round(closeSum/closeQty,4),
 			    DD_as_Pcnt=Math.Round(-dd/lastEquity*100,2),
 			    DD_as_Dlr=Math.Round(-dd,0),
@@ -234,7 +237,7 @@ foreach (var system in systems) {
 			    //rate = Math.Round(XRates[openSigs.First().Currency],4),
 			    //baseX = Math.Round(XRates[trade.Symbol.Substring(0,3)],4),
 			    //PntVal=trade.PtValue,
-			    DrawdownTimeET=trade.MaxDrawdownTime.ToString("yyyy-MM-dd HH:mm:ss"),
+			    DrawdownTimeET=trade.MaxDrawdownTime,//.ToString("yyyy-MM-dd HH:mm:ss"),
 			    DD_Quant=ddQty,
 			    DD_Worst_Price=Math.Round(trade.MaxDrawdown,4),
 			    Trade_PL=Math.Round(trade.Result,2),
@@ -243,79 +246,82 @@ foreach (var system in systems) {
 		}).ToList();
 		TABLE=ourTrades.OrderByDescending(t=>t.OpenTimeET);
 
-		// Create a chart object
-		ITimeSeriesChart systemChart = new TimeSeriesChart();
-		systemChart.Name = system.Item2;//"System equity curve";
-		//IChartTimeSeries systemSeries = new ChartTimeSeries();
-		//systemSeries.Type = ChartTypes.Line;
-		ITimeSeriesChart scalingChart = new TimeSeriesChart();
-		scalingChart.Name = system.Item2 + " Stops Scaling";//"System equity curve";
+		if (true) {
+			// Create a chart object
+			ITimeSeriesChart systemChart = new TimeSeriesChart();
+			systemChart.Name = system.Item2;//"System equity curve";
+			//IChartTimeSeries systemSeries = new ChartTimeSeries();
+			//systemSeries.Type = ChartTypes.Line;
+			ITimeSeriesChart scalingChart = new TimeSeriesChart();
+			scalingChart.Name = system.Item2 + " Stops Scaling";//"System equity curve";
 
-		var realisedEquity = new List<KeyValuePair<DateTime,decimal> >( ourTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),t.Equity); }));
-		var realtimeEquity = C2EQUITY.Where(sys=>sys.SystemId == system.Item1).Select(ep => new KeyValuePair<DateTime,decimal>(ep.DateTime,ep.Value) );
+			var realisedEquity = new List<KeyValuePair<DateTime,decimal> >( ourTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,t.Equity); }));
+			var realtimeEquity = C2EQUITY.Where(sys=>sys.SystemId == system.Item1).Select(ep => new KeyValuePair<DateTime,decimal>(ep.DateTime,ep.Value) );
 
-		systemChart.Add( new Series<DateTime,decimal>( realisedEquity ),
-		                 "Realised Equity",
-		                 colors[colorIndex++]);
+			systemChart.Add( new Series<DateTime,decimal>( realisedEquity ),
+			                 "Realised Equity",
+			                 colors[colorIndex++]);
 
-		systemChart.Add( new Series<DateTime,decimal>( realtimeEquity ),
-		                 "Realtime Equity",
-		                 colors[colorIndex++]);
+			systemChart.Add( new Series<DateTime,decimal>( realtimeEquity ),
+			                 "Realtime Equity",
+			                 colors[colorIndex++]);
 
-		//TABLE = trades;
-		var stopsPnL = Frame.FromRowKeys(ourTrades.Select(t=>DateTime.Parse(t.OpenTimeET)));
-		stopsPnL.AddColumn("PnL", ourTrades.Select(t=>t.Trade_PL));
-		TABLE=FrameToTable(stopsPnL);
+			//TABLE = trades;
+			// var stopsPnL = Frame.FromRowKeys(ourTrades.Select(t=>t.OpenTimeET));
+			// stopsPnL.AddColumn("PnL", ourTrades.Select(t=>t.Trade_PL));
+			// TABLE=FrameToTable(stopsPnL);
 
-		foreach ( var stop in autoStops ) {
-			runningEquity = startingCash;
-			decimal runningScaling = 1.0m;
-			int stopsHit = 0;
+			foreach ( var stop in autoStops ) {
+				runningEquity = startingCash;
+				decimal runningScaling = 1.0m;
+				int stopsHit = 0;
 
-			var stopTrades = ourTrades.Select( trade =>
-			{
-				decimal stopResult = 0;
+				var stopTrades = ourTrades.Select( trade =>
+				{
+					decimal stopResult = 0;
 
-				if ( -stop < trade.DD_as_Pcnt )  {
-				    stopResult = Math.Round(trade.Trade_PL * runningScaling,2);
-				    runningEquity = Math.Max(runningEquity+stopResult,0);
-				}else{
-				    stopResult = Math.Round( (-stop/trade.DD_as_Pcnt) * (trade.DD_as_Dlr * runningScaling), 0 );
-				    runningEquity = Math.Max(runningEquity+stopResult,0);
-				    runningScaling = Math.Max(Math.Round(runningEquity/trade.Equity,1),0);
-				    stopsHit++;
-				}
+					if ( -stop < trade.DD_as_Pcnt )  {
+					    stopResult = Math.Round(trade.Trade_PL * runningScaling,2);
+					    runningEquity = Math.Max(runningEquity+stopResult,0);
+					}else{
+					    stopResult = Math.Round( (-stop/trade.DD_as_Pcnt) * (trade.DD_as_Dlr * runningScaling), 0 );
+					    runningEquity = Math.Max(runningEquity+stopResult,0);
+					    runningScaling = Math.Max(Math.Round(runningEquity/trade.Equity,1),0);
+					    stopsHit++;
+					}
 
-				return new {
-				    OpenTimeET = trade.OpenTimeET,
-				    ClosedTimeET = trade.ClosedTimeET,
-				    ModelDdPct = trade.DD_as_Pcnt,
-				    StopPct = -stop,
-				    ModelDdDlr = trade.DD_as_Dlr,
-				    ModelPnL = trade.Trade_PL,
-				    StopPnL = stopResult,
-				    ModelEquity = trade.Equity,
-				    StopEquity = runningEquity,
-				    Scaling = runningScaling,
-				    StopHits = stopsHit,
-				};
-			}).ToList();
-			// TABLE = stopTrades;
+					return new {
+					    OpenTimeET = trade.OpenTimeET,
+					    ClosedTimeET = trade.ClosedTimeET,
+					    ModelDdPct = trade.DD_as_Pcnt,
+					    StopPct = -stop,
+					    ModelDdDlr = trade.DD_as_Dlr,
+					    ModelPnL = trade.Trade_PL,
+					    StopPnL = stopResult,
+					    ModelEquity = trade.Equity,
+					    StopEquity = runningEquity,
+					    Scaling = runningScaling,
+					    StopHits = stopsHit,
+					};
+				}).ToList();
+				// TABLE = stopTrades;
 
-			var stopEquity = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),t.StopEquity); }));
-			systemChart.Add( new Series<DateTime,decimal>( stopEquity ),
-			                 String.Format("Equity w {0}% stop", stop),
-			                 colors[colorIndex]);
+				var stopEquity = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,t.StopEquity); }));
+				systemChart.Add( new Series<DateTime,decimal>( stopEquity ),
+				                 String.Format("Equity w {0}% stop", stop),
+				                 colors[colorIndex]);
 
-			var scalingPoints = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(DateTime.Parse(t.ClosedTimeET),(decimal)t.Scaling); }));
-			scalingChart.Add( new Series<DateTime,decimal>( scalingPoints ),
-			                  String.Format("Scaling for {0}% stop", stop),
-			                  colors[colorIndex++]);
+				var scalingPoints = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,(decimal)t.Scaling); }));
+				scalingChart.Add( new Series<DateTime,decimal>( scalingPoints ),
+				                  String.Format("Scaling for {0}% stop", stop),
+				                  colors[colorIndex++]);
 
-		} // autostops
-		HR();
-		CHART=systemChart;
-		CHART=scalingChart;
+
+			} // autostops
+			HR();
+			CHART=systemChart;
+			CHART=scalingChart;
+		}
 	}else{
 		TABLE = trades;
 		TABLE = signals;
