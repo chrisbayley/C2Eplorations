@@ -33,6 +33,7 @@ var scenarios = new[] {
 		startingCap=100000,
 		scaling=0.0,
 		systems = new[] {
+
 			// SystemID, SystemName, SystemScaling
 			Tuple.Create(124998567, "abasacJAR 4X", 1.0 ),
 			//Tuple.Create(94987184,  "Just Forex Trades",  0.375),
@@ -71,16 +72,40 @@ var scenarios = new[] {
 		}
 	},
 	new {
-		name="Heave to",
+		name="AWF Model",
 		enabled=true,
-		startingCap=40000,
-		scaling=0.5,
+		startingCap=50000,
+		scaling=1.0,
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
-			Tuple.Create(124998567, "abasacJAR 4X", 4.0 ),
+
+			Tuple.Create(122467834, "Auto Wave Forex",  0.7),
+
+		}
+	},  new {
+		name="AWF Autoscale",
+		enabled=true,
+		startingCap=35000,
+		scaling=0.0,
+		systems = new[] {
+			// SystemID, SystemName, SystemScaling
+			Tuple.Create(122467834, "Auto Wave Forex",  0.7),
+
+		}
+	},
+	new {
+		name="Heave to",
+		enabled=false,
+		startingCap=35000,
+		scaling=1.0,
+		systems = new[] {
+			// SystemID, SystemName, SystemScaling
+			Tuple.Create(124998567, "abasacJAR 4X", 2.3 ),
 			Tuple.Create(125587405, "Stock Star", 3.0),
-			Tuple.Create(102081384, "OPN W888", 0.5),
-			Tuple.Create(125624499, "Dow M",2.0)
+			Tuple.Create(102081384, "OPN W888", 0.25),
+			Tuple.Create(125624499, "Dow M",2.0),
+			Tuple.Create(122467834, "Auto Wave Forex",  0.7),
+
 		}
 	},
 
@@ -122,8 +147,8 @@ bool showCorrelation = false;
 bool showBollingerBands = false;
 
 // Do the simulation for these Time Intevals
-TimeInterval[] timeIntervals= new[] {TimeInterval.Day, TimeInterval.Month};
-//TimeInterval[] timeIntervals= new[] {TimeInterval.Day};
+//TimeInterval[] timeIntervals= new[] {TimeInterval.Day, TimeInterval.Month};
+TimeInterval[] timeIntervals= new[] {TimeInterval.Day};
 
 // Normally we just use the earliest date common to all system but if you
 // want to limit the date range further set a date for inception here
