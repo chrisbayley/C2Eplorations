@@ -71,7 +71,7 @@ var scenarios = new[] {
 			//Tuple.Create(94987184,  "Just Forex Trades",  0.375),
 		}
 	},
-	new {
+      	new {
 		name="AWF Model",
 		enabled=true,
 		startingCap=50000,
@@ -79,17 +79,17 @@ var scenarios = new[] {
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
 
-			Tuple.Create(122467834, "Auto Wave Forex",  0.7),
+            Tuple.Create(122467834, "Auto Wave Forex",  1.0),
 
 		}
-	},  new {
+	},	new {
 		name="AWF Autoscale",
 		enabled=true,
 		startingCap=35000,
 		scaling=0.0,
 		systems = new[] {
 			// SystemID, SystemName, SystemScaling
-			Tuple.Create(122467834, "Auto Wave Forex",  0.7),
+            Tuple.Create(122467834, "Auto Wave Forex",  0.7),
 
 		}
 	},
@@ -104,7 +104,7 @@ var scenarios = new[] {
 			Tuple.Create(125587405, "Stock Star", 3.0),
 			Tuple.Create(102081384, "OPN W888", 0.25),
 			Tuple.Create(125624499, "Dow M",2.0),
-			Tuple.Create(122467834, "Auto Wave Forex",  0.7),
+            Tuple.Create(122467834, "Auto Wave Forex",  0.7),
 
 		}
 	},
