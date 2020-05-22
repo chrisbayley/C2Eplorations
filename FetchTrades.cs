@@ -1,7 +1,7 @@
 var systems = new[] {
 	// SystemID, SystemName, SystemScaling, System stops
 	// Run the forex systems first so we can scrape the trades to update the X-Rates table
-	// Tuple.Create(94987184,  "Just Forex Trades",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
+	Tuple.Create(94987184,  "Just Forex Trades",  1.0, new double[] {1,2,5,10.0,12.5,15.0,17.5,20.0,30.0}),
 	//Tuple.Create(124998567, "abasacJAR 4X", 1.0, new double[] {5.0,10.0,15.0}), // Seems to be missing 60 odd trades !!!!
 	//Tuple.Create(117863277,  "Forex Agressive risk",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
 
@@ -18,7 +18,7 @@ var systems = new[] {
 	////Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0} ), // Casuses 'Duplicate keys' error
 	// Tuple.Create(124998567, "abasacJAR 4X", 4.0, new double[] {5.0,10.0,15.0} ),
 	// Tuple.Create(125587405, "Stock Star", 3.0, new double[] {5.0,10.0,15.0} ),
-	Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0}),
+	//Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0}),
 	//Tuple.Create(125624499, "Dow M",2.0, new double[] {5.0,10.0,15.0}),// Casuses 'Duplicate keys' error
 
 
@@ -149,12 +149,15 @@ foreach (var system in systems) {
 	decimal runningEquity = startingCash;
 	DateTime lastExitTime = new DateTime(0);
 	DateTime exitTime = new DateTime(0);
+	DateTime lastEntryTime = new DateTime(0);
+	DateTime entryTime = new DateTime(0);
 
 
 	// We need to convert each query to a List so that we don't have open more than one database connection
-	var signals = C2SIGNALS.Where(sig => sig.SystemId == system.Item1 && sig.PostedWhen > startDate).OrderBy(sig=>sig.TradedWhen).ToList();
+	var signals = C2SIGNALS.Where(sig => sig.SystemId == system.Item1 && sig.PostedWhen > startDate)
+					.OrderBy(sig=>sig.TradedWhen).ToList();
 	var trades = C2TRADES.Where( trade => trade.SystemId == system.Item1 && trade.EntryTime > startDate )
-	             .OrderBy(trade => trade.ExitTime).ToList();
+	             	.OrderBy(trade => trade.ExitTime).ToList();
 
 	if (debug) {
 		// We will record the currency for every trade for debugging in the case that we find a currency not in our XRates tables
@@ -220,9 +223,13 @@ foreach (var system in systems) {
 			if ( exitTime == lastExitTime )
 				exitTime += new TimeSpan(1); //100ns
 			lastExitTime = exitTime;
+			entryTime = trade.EntryTime;
+			if ( entryTime == lastEntryTime )
+				entryTime += new TimeSpan(1); //100ns
+			lastEntryTime = entryTime;
 			return new {
 			    //TradeId=trade.Id,
-			    OpenTimeET=trade.EntryTime,//.ToString("yyyy-MM-dd HH:mm:ss"),
+			    OpenTimeET=entryTime,//.ToString("yyyy-MM-dd HH:mm:ss"),
 			    Side=sideWord[trade.Action],
 			    QtyOpen=openQty,
 			    Symbol=trade.Symbol,
@@ -244,7 +251,8 @@ foreach (var system in systems) {
 			    Equity=runningEquity,
 			};
 		}).ToList();
-		TABLE=ourTrades.OrderByDescending(t=>t.OpenTimeET);
+		TABLE=ourTrades.OrderByDescending(t=>t.ClosedTimeET);
+		//TABLE=ourTrades.OrderBy(t=>t.ClosedTimeET);
 
 		if (true) {
 			// Create a chart object
@@ -267,8 +275,8 @@ foreach (var system in systems) {
 			                 colors[colorIndex++]);
 
 			//TABLE = trades;
-			// var stopsPnL = Frame.FromRowKeys(ourTrades.Select(t=>t.OpenTimeET));
-			// stopsPnL.AddColumn("PnL", ourTrades.Select(t=>t.Trade_PL));
+			var stopsPnL = Frame.FromRowKeys(ourTrades.Select(t=>t.ClosedTimeET));
+			stopsPnL.AddColumn("PnL", ourTrades.Select(t=>t.Trade_PL));
 			// TABLE=FrameToTable(stopsPnL);
 
 			foreach ( var stop in autoStops ) {
@@ -311,6 +319,12 @@ foreach (var system in systems) {
 				                 String.Format("Equity w {0}% stop", stop),
 				                 colors[colorIndex]);
 
+				stopsPnL.AddColumn(
+					String.Format("{0}%",stop).Replace(".","p"),
+					new Series<DateTime,decimal>( stopTrades.Select(t=>{ return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,t.StopPnL); } ))
+					);
+
+
 				var scalingPoints = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,(decimal)t.Scaling); }));
 				scalingChart.Add( new Series<DateTime,decimal>( scalingPoints ),
 				                  String.Format("Scaling for {0}% stop", stop),
@@ -318,6 +332,7 @@ foreach (var system in systems) {
 
 
 			} // autostops
+			TABLE=FrameToTable(stopsPnL);
 			HR();
 			CHART=systemChart;
 			CHART=scalingChart;
