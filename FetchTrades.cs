@@ -1,27 +1,27 @@
+// SET UP THE MODEL HERE ==============================================================================================//
 var systems = new[] {
 	// SystemID, SystemName, SystemScaling, System stops
-	// Run the forex systems first so we can scrape the trades to update the X-Rates table
-	Tuple.Create(94987184,  "Just Forex Trades",  1.0, new double[] {1,2,5,10.0,12.5,15.0,17.5,20.0,30.0}),
-	//Tuple.Create(124998567, "abasacJAR 4X", 1.0, new double[] {5.0,10.0,15.0}), // Seems to be missing 60 odd trades !!!!
-	//Tuple.Create(117863277,  "Forex Agressive risk",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
 
-	//Tuple.Create(122467834,  "Auto Wave Forex",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
+	// Run the forex systems first so we can scrape the trades to update the X-Rates table
+	Tuple.Create(94987184,  "Just Forex Trades",  1.0, new double[] {10.0,12.5,15.0,17.5,20.0,30.0}),
+	Tuple.Create(124998567, "abasacJAR 4X", 1.0, new double[] {5.0,7.5,10.0,12.5, 15.0, 20, 25, 30}),
+	//Tuple.Create(117863277,  "Forex Agressive risk",  1.0, new double[] {5.0,10.0,12.5,13.0,15.0,17.5,20.0,25.0}),
+	Tuple.Create(122467834,  "Auto Wave Forex",  1.0, new double[] {5.0,6,7,8,9,10.0}),
 
 	// PPRs pets systems
-	// Tuple.Create(120622361, "NQ Kingpin", 1.0 ),
-	// Tuple.Create(115023400, "Crude Oil Trader Z", 1.0),
-	// Tuple.Create(119232154, "PegasiCap", 1.0),
+	//Tuple.Create(120622361, "NQ Kingpin", 1.0, new double[] {1.0,2.0,5.0,10.0,15.0} ),
+	//Tuple.Create(115023400, "Crude Oil Trader Z", 1.0, new double[] {1.0,2.0,5.0,10.0,15.0} ),
+	//Tuple.Create(119232154, "PegasiCap", 1.0, new double[] {1.0,2.0,5.0,10.0,15.0} ),
+
 	// CDBs pet systems
 	// Tuple.Create(125935591, "Klarity", 3.0, new double[] {5.0,10.0,15.0} ),
 	////Tuple.Create(117442067, "Carma Managed Future",1.0, new double[] {5.0,10.0,15.0} ), // Bad data in here causes Div0 Error
 	// Tuple.Create(125428941, "Clear Futures", 3.0, new double[] {5.0,10.0,15.0} ),
-	////Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0} ), // Casuses 'Duplicate keys' error
+	////Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0} ),
 	// Tuple.Create(124998567, "abasacJAR 4X", 4.0, new double[] {5.0,10.0,15.0} ),
-	// Tuple.Create(125587405, "Stock Star", 3.0, new double[] {5.0,10.0,15.0} ),
+	Tuple.Create(125587405, "Stock Star", 3.0, new double[] {1,2,3,4,5.0,} ),
 	//Tuple.Create(102081384, "OPN W888", 0.5, new double[] {5.0,10.0,15.0}),
-	//Tuple.Create(125624499, "Dow M",2.0, new double[] {5.0,10.0,15.0}),// Casuses 'Duplicate keys' error
-
-
+	//Tuple.Create(125624499, "Dow M",2.0, new double[] {5.0,10.0,15.0}),
 	//
 	// // Forex systems
 	// Tuple.Create(  121872737, "Aggressive Trend Scalper", 1.0 ),
@@ -100,18 +100,25 @@ var systems = new[] {
 	// Tuple.Create(	102427283	, "Smart Volatility Margin", 1.0 ),
 
 };
+// GLOBAL VARIABLES ==============================================================================================//
 
 // Get some colors to use
 List<System.Drawing.Color> colors = new List<System.Drawing.Color>(new System.Drawing.Color[]
                                                                    {Color.Blue, Color.Brown, Color.Red, Color.Green, Color.Orange, Color.Purple,
-                                                                    Color.Pink, Color.DarkGreen, Color.DarkBlue, Color.Olive}
-                                                                   );
-
+                                                                    Color.Pink, Color.DarkGreen, Color.DarkBlue, Color.Olive,
+                                                                    Color.DarkBlue, Color.DarkCyan, Color.DarkGoldenrod, Color.DarkGray, Color.DarkGreen,
+                                                                    Color.DarkKhaki, Color.DarkMagenta, Color.DarkOliveGreen, Color.DarkOrange, Color.DarkOrchid,
+                                                                    Color.DarkRed, Color.DarkSalmon, Color.DarkSeaGreen, Color.DarkSlateBlue, Color.DarkSlateGray,
+                                                                    Color.DarkTurquoise, Color.DarkViolet} );
 int colorIndex = 0;
 var systemsIds = systems.Select(f=>(long)f.Item1);
 var sideWord = new Dictionary <string,string> () {
 	{"BTO","LONG"}, {"STO","SHORT"}
 };
+
+// A 'bootstrap' exchange rate tables updated April 2020, so long as we run some
+// forex systems through the program first we can scrape the trades for more current
+// x-rates and update our table as we go
 var XRates = new Dictionary<string,double>()
 {
 //CHF,JPY,AUD,NZD,USD,CAD,GBP,EUR,HUF,CNH,SEK,TRY,ZAR
@@ -134,16 +141,15 @@ var XRates = new Dictionary<string,double>()
 var startDate = new DateTime(2015,01,01);
 var startTime = DateTime.Now;
 
+
+bool debug = false;
+// We will keep a list of all currencies seen in case we need it for debugging
 List<String> allCurrencies =  new List<String>();
 List<String> errors =  new List<String>();
 
-
-bool debug = false;
-
+// MAIN ==============================================================================================//
+// Here we go.....
 foreach (var system in systems) {
-	colorIndex = 0;
-	H2 = system.Item2;
-
 	var autoStops = system.Item4.Select(x=>(decimal)x);
 	var startingCash = C2SYSTEMS.Where( sys => sys.SystemId == system.Item1 ).Select( sys => sys.StartingCash ).First();
 	decimal runningEquity = startingCash;
@@ -151,14 +157,14 @@ foreach (var system in systems) {
 	DateTime exitTime = new DateTime(0);
 	DateTime lastEntryTime = new DateTime(0);
 	DateTime entryTime = new DateTime(0);
-
+	colorIndex = 0;
 
 	// We need to convert each query to a List so that we don't have open more than one database connection
-	var signals = C2SIGNALS.Where(sig => sig.SystemId == system.Item1 && sig.PostedWhen > startDate)
-					.OrderBy(sig=>sig.TradedWhen).ToList();
+	var signals = C2SIGNALS.Where(sig => sig.SystemId == system.Item1 && sig.PostedWhen > startDate).OrderBy(sig=>sig.TradedWhen).ToList();
 	var trades = C2TRADES.Where( trade => trade.SystemId == system.Item1 && trade.EntryTime > startDate )
-	             	.OrderBy(trade => trade.ExitTime).ToList();
+	             .OrderBy(trade => trade.ExitTime).ToList();
 
+	// Sometimes when adding a a new forex system we encounter currencies we don't have in our x-rates table, this debug helps us identify them
 	if (debug) {
 		// We will record the currency for every trade for debugging in the case that we find a currency not in our XRates tables
 		foreach ( var currency in signals.Select( s => s.Currency ).Distinct().ToList() ) {
@@ -175,6 +181,7 @@ foreach (var system in systems) {
 		}
 	}
 
+	// Now we start to build our trades table  ------------------------------------------------------------ //
 	if (true) {
 		var ourTrades=trades.Select( trade =>
 		{
@@ -201,7 +208,7 @@ foreach (var system in systems) {
 			}
 
 			// If there is a price for MaxDrawdown then we compute the DD
-			if ( true && trade.MaxDrawdown != 0 ) {
+			if ( trade.MaxDrawdown != 0 ) {
 			    if ( trade.Instrument.Equals("forex") ) {
 			        // If we are lookinhg at a USD trade that gives us a chance to update the x-rates table
 			        if (trade.Symbol.Substring(0,3).Equals("USD")) {
@@ -219,14 +226,21 @@ foreach (var system in systems) {
 			             * (decimal)XRates[signals.First().Currency];
 				}
 			}
-			exitTime = trade.ExitTime;
-			if ( exitTime == lastExitTime )
-				exitTime += new TimeSpan(1); //100ns
-			lastExitTime = exitTime;
-			entryTime = trade.EntryTime;
-			if ( entryTime == lastEntryTime )
-				entryTime += new TimeSpan(1); //100ns
-			lastEntryTime = entryTime;
+
+			// Entry and Exit times are used as table keys  and therefore must be unique
+			// sometime the database contains duplicate entry or exit times, when that
+			// happens we will 'bump' them by 100ns
+			{
+			    exitTime = trade.ExitTime;
+			    if ( exitTime == lastExitTime )
+					exitTime += new TimeSpan(1); //100ns
+			    lastExitTime = exitTime;
+			    entryTime = trade.EntryTime;
+			    if ( entryTime == lastEntryTime )
+					entryTime += new TimeSpan(1); //100ns
+			    lastEntryTime = entryTime;
+			}
+			// return the new table row
 			return new {
 			    //TradeId=trade.Id,
 			    OpenTimeET=entryTime,//.ToString("yyyy-MM-dd HH:mm:ss"),
@@ -251,17 +265,25 @@ foreach (var system in systems) {
 			    Equity=runningEquity,
 			};
 		}).ToList();
-		TABLE=ourTrades.OrderByDescending(t=>t.ClosedTimeET);
-		//TABLE=ourTrades.OrderBy(t=>t.ClosedTimeET);
+		// ------------------------------------------------------------------------------------- //
+
+		// Create a deedle frame with trade ClosedTime as Keys
+		var ourFrame = Frame.FromRowKeys(ourTrades.Select(t=>t.ClosedTimeET));
+		// copy all the properties from ourTrades into ourFrame
+		foreach (var p in ourTrades.First().GetType().GetProperties() ) {
+			ourFrame.AddColumn(p.Name, ourTrades.Select(t=>p.GetValue(t)));
+		}
+		// Add an empty column
+		ourFrame.AddColumn("_", Enumerable.Repeat("", ourTrades.Count()));
+
 
 		if (true) {
-			// Create a chart object
+			// Create chart objects
 			ITimeSeriesChart systemChart = new TimeSeriesChart();
-			systemChart.Name = system.Item2;//"System equity curve";
-			//IChartTimeSeries systemSeries = new ChartTimeSeries();
-			//systemSeries.Type = ChartTypes.Line;
+			systemChart.Name = system.Item2;
+
 			ITimeSeriesChart scalingChart = new TimeSeriesChart();
-			scalingChart.Name = system.Item2 + " Stops Scaling";//"System equity curve";
+			scalingChart.Name = system.Item2 + " Stops Scaling";
 
 			var realisedEquity = new List<KeyValuePair<DateTime,decimal> >( ourTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,t.Equity); }));
 			var realtimeEquity = C2EQUITY.Where(sys=>sys.SystemId == system.Item1).Select(ep => new KeyValuePair<DateTime,decimal>(ep.DateTime,ep.Value) );
@@ -274,11 +296,7 @@ foreach (var system in systems) {
 			                 "Realtime Equity",
 			                 colors[colorIndex++]);
 
-			//TABLE = trades;
-			var stopsPnL = Frame.FromRowKeys(ourTrades.Select(t=>t.ClosedTimeET));
-			stopsPnL.AddColumn("PnL", ourTrades.Select(t=>t.Trade_PL));
-			// TABLE=FrameToTable(stopsPnL);
-
+			// Now process the autoStops data series
 			foreach ( var stop in autoStops ) {
 				runningEquity = startingCash;
 				decimal runningScaling = 1.0m;
@@ -287,17 +305,19 @@ foreach (var system in systems) {
 				var stopTrades = ourTrades.Select( trade =>
 				{
 					decimal stopResult = 0;
-
+					// No stop -> result is same as scaled trade result
 					if ( -stop < trade.DD_as_Pcnt )  {
 					    stopResult = Math.Round(trade.Trade_PL * runningScaling,2);
 					    runningEquity = Math.Max(runningEquity+stopResult,0);
-					}else{
+					}
+					// Stop Hit -> result is the scaled fraction of the trade DD
+					else{
 					    stopResult = Math.Round( (-stop/trade.DD_as_Pcnt) * (trade.DD_as_Dlr * runningScaling), 0 );
 					    runningEquity = Math.Max(runningEquity+stopResult,0);
 					    runningScaling = Math.Max(Math.Round(runningEquity/trade.Equity,1),0);
 					    stopsHit++;
 					}
-
+					// return the table row for this stop
 					return new {
 					    OpenTimeET = trade.OpenTimeET,
 					    ClosedTimeET = trade.ClosedTimeET,
@@ -311,42 +331,51 @@ foreach (var system in systems) {
 					    Scaling = runningScaling,
 					    StopHits = stopsHit,
 					};
-				}).ToList();
-				// TABLE = stopTrades;
+				}).ToList(); //stopTrades
 
+				// create the stops equity series for the chart
 				var stopEquity = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,t.StopEquity); }));
 				systemChart.Add( new Series<DateTime,decimal>( stopEquity ),
-				                 String.Format("Equity w {0}% stop", stop),
+				                 String.Format("{0}% stop", stop),
 				                 colors[colorIndex]);
 
-				stopsPnL.AddColumn(
-					String.Format("{0}%",stop).Replace(".","p"),
-					new Series<DateTime,decimal>( stopTrades.Select(t=>{ return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,t.StopPnL); } ))
-					);
-
-
+				// create a series of 'scaling points' to show when the systems needs rescaling subsequent to a 'stop event'
 				var scalingPoints = new List<KeyValuePair<DateTime,decimal> >( stopTrades.OrderBy(t=>t.ClosedTimeET).Select(t=> { return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,(decimal)t.Scaling); }));
 				scalingChart.Add( new Series<DateTime,decimal>( scalingPoints ),
 				                  String.Format("Scaling for {0}% stop", stop),
 				                  colors[colorIndex++]);
 
-
+				// Add the stops results to our frame. We can't put "." in the coumn titles so we use "_" which turns into " " in the final output
+				ourFrame.AddColumn(
+					String.Format("{0}%",stop).Replace(".","_"),
+					new Series<DateTime,decimal>( stopTrades.Select(t=>{ return new KeyValuePair<DateTime,decimal>(t.ClosedTimeET,t.StopPnL); }))
+					);
 			} // autostops
-			TABLE=FrameToTable(stopsPnL);
-			HR();
+
+			/*=== OUTPUT ======================================================================================================*/
+			H2 = system.Item2;
 			CHART=systemChart;
+			HTML="<br/>";
 			CHART=scalingChart;
+			//TABLE=ourTrades.OrderByDescending(t=>t.ClosedTimeET);
+			//TABLE=ourTrades.OrderBy(t=>t.ClosedTimeET);
+			HTML="<br/>";
+			// Oldest first
+			//TABLE=FrameToTable(ourFrame);
+			HTML="<br/>";
+			// Newest first
+			TABLE=FrameToTable(ourFrame.RealignRows(ourFrame.RowKeys.Reverse()));
+
+			TEXT = String.Format("Query took {0}ms", (DateTime.Now - startTime).Milliseconds.ToString() );
+			HR();
+			/*=== OUTPUT ======================================================================================================*/
 		}
 	}else{
 		TABLE = trades;
 		TABLE = signals;
 	}
 
-
-	TEXT = String.Format("Query took {0}ms", (DateTime.Now - startTime).Milliseconds.ToString() );
-	HR();
-
-	if(false) {
+	if(debug) {
 		// Look for the symbols a system trades
 		TEXT="Symbols:" + system.Item2;
 		TABLE = (from trade in C2TRADES
@@ -356,8 +385,8 @@ foreach (var system in systems) {
 }
 
 // if we have a problem with missing rates in the x-rates table we can turn on this debug
-//TEXT = "All Currencies traded: " + String.Join(",",allCurrencies);
-if (false) {
+if (debug) {
+	TEXT = "All Currencies traded: " + String.Join(",",allCurrencies);
 	foreach ( var cur in allCurrencies ) {
 		if ( !XRates.ContainsKey( cur ) ) {
 			TEXT = "Missing rate for " + cur;
